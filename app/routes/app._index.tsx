@@ -10,8 +10,8 @@ import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { memoryStore } from "../memory.server";
 
-const OUTBLOG_API_URL = "http://localhost:8000"; // use this locally if needed
-// const OUTBLOG_API_URL = "https://api.outblogai.com";
+// const OUTBLOG_API_URL = "http://localhost:8000"; // use this locally if needed
+const OUTBLOG_API_URL = "https://api.outblogai.com";
 
 interface BlogPost {
   id: string;
