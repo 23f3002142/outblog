@@ -73,12 +73,27 @@ Check `package.json` - your build script should be:
 
 ### 2.3 Verify Vercel Configuration
 
-Check `vercel.json`:
+Check `vercel.json` - should contain:
 ```json
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install"
+  "buildCommand": "prisma generate && npm run build",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ]
 }
+```
+
+And `api/index.js` - the serverless function entry point:
+```javascript
+import { createRequestHandler } from "@react-router/node";
+import * as build from "../build/server/index.js";
+
+export default createRequestHandler({ build });
 ```
 ✅ Already configured!
 
@@ -347,6 +362,21 @@ If you change environment variables:
 ---
 
 ## ⚠️ Troubleshooting
+
+### Issue: "The pattern 'build/server/index.js' defined in functions doesn't match"
+
+**Solution:**
+This error occurs with incorrect `vercel.json` configuration for React Router v7. The fix has been applied:
+- Simplified `vercel.json` to use minimal configuration
+- Created `api/index.js` as the Vercel serverless function entry point
+- Added rewrites to route all requests through the API handler
+
+After applying the fix, commit and redeploy:
+```bash
+git add vercel.json api/
+git commit -m "Fix Vercel deployment configuration"
+git push origin main
+```
 
 ### Issue: "Cannot connect to database"
 

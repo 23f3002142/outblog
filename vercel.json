@@ -1,23 +1,11 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
+  "buildCommand": "prisma generate && npm run build",
   "installCommand": "npm install",
-  "framework": null,
-  "outputDirectory": "build/client",
-  "regions": ["iad1"],
-  "functions": {
-    "build/server/index.js": {
-      "maxDuration": 10
-    }
-  },
+  "devCommand": "npm run dev",
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/build/server/index.js"
+      "destination": "/api"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
