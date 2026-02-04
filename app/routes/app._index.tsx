@@ -8,7 +8,7 @@ import { useFetcher, useLoaderData, useNavigate, useSearchParams } from "react-r
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
-import { memoryStore } from "../memory.server";
+import { PrismaClient } from "@prisma/client";
 
 // const OUTBLOG_API_URL = "http://localhost:8000"; // use this locally if needed
 const OUTBLOG_API_URL = "https://api.outblogai.com";
@@ -48,19 +48,39 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const pageSize = 10;
   const skip = (page - 1) * pageSize;
 
-  let shopSettings = await memoryStore.getShopSettings(shop);
+  const prisma = new PrismaClient();
+
+  let shopSettings = await prisma.shopSettings.findUnique({
+    where: { shop },
+    include: { blogs: true }
+  });
 
   if (!shopSettings) {
-    shopSettings = await memoryStore.createShopSettings(shop);
+    shopSettings = await prisma.shopSettings.create({
+      data: {
+        shop,
+        postAsDraft: true,
+      },
+      include: { blogs: true }
+    });
   }
 
-  const { posts: blogs, total: totalBlogs } = await memoryStore.getBlogPosts(shop, skip, pageSize);
+  const totalBlogs = await prisma.outblogPost.count({
+    where: { shopSettingsId: shopSettings.id }
+  });
+
+  const blogs = await prisma.outblogPost.findMany({
+    where: { shopSettingsId: shopSettings.id },
+    orderBy: { createdAt: 'desc' },
+    skip,
+    take: pageSize,
+  });
 
   return {
     shop,
     apiKey: shopSettings.apiKey,
     postAsDraft: shopSettings.postAsDraft,
-    blogs: blogs.map((b) => ({
+    blogs: blogs.map((b: any) => ({
       ...b,
       createdAt: b.createdAt.toISOString(),
     })),
@@ -76,6 +96,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const shop = session.shop;
   const formData = await request.formData();
   const actionType = formData.get("_action") as string;
+  const prisma = new PrismaClient();
 
   if (actionType === "saveApiKey") {
     const apiKey = formData.get("apiKey") as string;
@@ -102,7 +123,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
 
       // Save API key
-      await memoryStore.upsertShopSettings(shop, { apiKey, postAsDraft });
+      await prisma.shopSettings.upsert({
+        where: { shop },
+        update: { apiKey, postAsDraft },
+        create: { shop, apiKey, postAsDraft: postAsDraft || true },
+      });
 
       return { success: true, message: "API key saved successfully" };
     } catch (error) {
@@ -111,7 +136,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (actionType === "fetchBlogs") {
-    const shopSettings = await memoryStore.getShopSettings(shop);
+    const shopSettings = await prisma.shopSettings.findUnique({
+      where: { shop }
+    });
 
     if (!shopSettings?.apiKey) {
       return { success: false, error: "API key not configured" };
@@ -146,20 +173,41 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       for (const post of posts) {
         const slug = post.slug || post.title?.toLowerCase().replace(/\s+/g, "-") || "untitled";
         
-        await memoryStore.upsertBlogPost(shop, {
-          externalId: post.id,
-          slug,
-          title: post.title || "Untitled",
-          content: post.content,
-          metaDescription: post.blog_meta_data?.meta_description,
-          featuredImage: post.featured_image,
-          categories: JSON.stringify(post.blog_meta_data?.categories || []),
-          tags: JSON.stringify(post.blog_meta_data?.tags || []),
+        await prisma.outblogPost.upsert({
+          where: {
+            shopSettingsId_slug: {
+              shopSettingsId: shopSettings.id,
+              slug
+            }
+          },
+          update: {
+            externalId: post.id,
+            title: post.title || "Untitled",
+            content: post.content,
+            metaDescription: post.blog_meta_data?.meta_description,
+            featuredImage: post.featured_image,
+            categories: JSON.stringify(post.blog_meta_data?.categories || []),
+            tags: JSON.stringify(post.blog_meta_data?.tags || []),
+          },
+          create: {
+            shopSettingsId: shopSettings.id,
+            externalId: post.id,
+            slug,
+            title: post.title || "Untitled",
+            content: post.content,
+            metaDescription: post.blog_meta_data?.meta_description,
+            featuredImage: post.featured_image,
+            categories: JSON.stringify(post.blog_meta_data?.categories || []),
+            tags: JSON.stringify(post.blog_meta_data?.tags || []),
+          },
         });
       }
 
       // Update last sync time
-      await memoryStore.upsertShopSettings(shop, { lastSyncAt: new Date() });
+      await prisma.shopSettings.update({
+        where: { shop },
+        data: { lastSyncAt: new Date() }
+      });
 
       return { success: true, message: `Fetched ${posts.length} blogs` };
     } catch (error) {
@@ -201,13 +249,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   if (actionType === "checkLiveStatus") {
     // Verify that Shopify articles referenced by our blogs still exist and are published
-    const shopSettings = await memoryStore.getShopSettings(shop);
+    const shopSettings = await prisma.shopSettings.findUnique({
+      where: { shop },
+      include: { blogs: true }
+    });
 
     if (!shopSettings) {
       return { success: false, error: "Shop settings not found" };
     }
 
-    const blogsWithArticleId = shopSettings.blogs.filter((b) => b.shopifyArticleId);
+    const blogsWithArticleId = shopSettings.blogs.filter((b: any) => b.shopifyArticleId);
 
     if (blogsWithArticleId.length === 0) {
       return { success: true, message: "No published blogs to check" };
@@ -220,7 +271,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const batchSize = 50;
       for (let i = 0; i < blogsWithArticleId.length; i += batchSize) {
         const batch = blogsWithArticleId.slice(i, i + batchSize);
-        const ids = batch.map((b) => b.shopifyArticleId as string);
+        const ids = batch.map((b: any) => b.shopifyArticleId as string);
 
         const statusResponse = await admin.graphql(
           `#graphql
@@ -264,9 +315,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
 
       if (missingIds.length > 0) {
-        await memoryStore.updateManyBlogPosts(shop, missingIds, {
-          shopifyArticleId: undefined,
-          status: "draft",
+        await prisma.outblogPost.updateMany({
+          where: {
+            id: { in: missingIds },
+            shopSettingsId: shopSettings.id
+          },
+          data: {
+            shopifyArticleId: null,
+            status: "draft",
+          },
         });
       }
 
@@ -284,13 +341,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (actionType === "publishToShopify") {
     const blogId = formData.get("blogId") as string;
     
-    const shopSettings = await memoryStore.getShopSettings(shop);
+    const shopSettings = await prisma.shopSettings.findUnique({
+      where: { shop }
+    });
 
     if (!shopSettings) {
       return { success: false, error: "Shop settings not found" };
     }
 
-    const blogPost = await memoryStore.findBlogPost(shop, blogId);
+    const blogPost = await prisma.outblogPost.findUnique({
+      where: { id: blogId }
+    });
 
     if (!blogPost) {
       return { success: false, error: "Blog post not found" };
@@ -512,9 +573,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const articleId = createArticleData.data?.articleCreate?.article?.id;
 
       // Update the blog post with Shopify article ID
-      await memoryStore.updateBlogPost(shop, blogId, {
-        shopifyArticleId: articleId,
-        status: shopSettings.postAsDraft ? "draft" : "published",
+      await prisma.outblogPost.update({
+        where: { id: blogId },
+        data: {
+          shopifyArticleId: articleId,
+          status: shopSettings.postAsDraft ? "draft" : "published",
+        },
       });
 
       return { success: true, message: "Blog published to Shopify" };
@@ -564,7 +628,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (actionType === "publishAllToShopify") {
-    const shopSettings = await memoryStore.getShopSettings(shop);
+    const shopSettings = await prisma.shopSettings.findUnique({
+      where: { shop },
+      include: { blogs: true }
+    });
 
     if (!shopSettings) {
       return { success: false, error: "Shop settings not found" };
@@ -622,7 +689,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
 
       let publishedCount = 0;
-      const unpublishedBlogs = shopSettings.blogs.filter((blog) => !blog.shopifyArticleId);
+      const unpublishedBlogs = shopSettings.blogs.filter((blog: any) => !blog.shopifyArticleId);
       for (const blogPost of unpublishedBlogs) {
         let cleanContent = blogPost.content || "";
         cleanContent = cleanContent.replace(/^---\s[\s\S]*?---\s*/m, "");
@@ -658,9 +725,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         const createArticleData = await createArticleResponse.json();
         if (!createArticleData.data?.articleCreate?.userErrors?.length) {
           const articleId = createArticleData.data?.articleCreate?.article?.id;
-          await memoryStore.updateBlogPost(shop, blogPost.id, {
-            shopifyArticleId: articleId,
-            status: shopSettings.postAsDraft ? "draft" : "published",
+          await prisma.outblogPost.update({
+            where: { id: blogPost.id },
+            data: {
+              shopifyArticleId: articleId,
+              status: shopSettings.postAsDraft ? "draft" : "published",
+            },
           });
           publishedCount++;
         }
