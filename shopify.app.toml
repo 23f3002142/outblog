@@ -2,12 +2,11 @@
 
 client_id = "66866aa94e14670889abc6fe392708e3"
 name = "outblog"
-application_url = "https://api.outblogai.com/shopify"
+application_url = "https://outblog-bif5n3qz3-kshitijs-projects-592c93aa.vercel.app"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
-include_config_on_deploy = true
 
 [webhooks]
 api_version = "2026-04"
@@ -25,4 +24,4 @@ api_version = "2026-04"
 scopes = "read_content,write_content"
 
 [auth]
-redirect_urls = [ "https://api.outblogai.com/shopify/api/auth" ]
+redirect_urls = [ "https://outblog-bif5n3qz3-kshitijs-projects-592c93aa.vercel.app/api/auth" ]
