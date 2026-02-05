@@ -27,7 +27,7 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 
-  @@map("Session")
+  @@map("session")
 }
 
 model ShopSettings {
