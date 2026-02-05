@@ -1,8 +1,5 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateTable
-CREATE TABLE "Session" (
+CREATE TABLE "session" (
     "id" TEXT NOT NULL,
     "shop" TEXT NOT NULL,
     "state" TEXT NOT NULL,
@@ -21,7 +18,7 @@ CREATE TABLE "Session" (
     "refreshToken" TEXT,
     "refreshTokenExpires" TIMESTAMP(3),
 
-    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "session_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -65,4 +62,3 @@ CREATE UNIQUE INDEX "OutblogPost_shopSettingsId_slug_key" ON "OutblogPost"("shop
 
 -- AddForeignKey
 ALTER TABLE "OutblogPost" ADD CONSTRAINT "OutblogPost_shopSettingsId_fkey" FOREIGN KEY ("shopSettingsId") REFERENCES "ShopSettings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-

@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Session {
+model session {
   id                  String    @id
   shop                String
   state               String
@@ -25,6 +25,8 @@ model Session {
   emailVerified       Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
+  
+  @@map("session")
 }
 
 model ShopSettings {
