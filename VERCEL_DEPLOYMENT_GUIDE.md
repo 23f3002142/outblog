@@ -38,14 +38,27 @@ Your app uses:
 2. Create a new project
 3. Copy the connection string (format: `postgresql://user:password@host/dbname`)
 
-### Option C: Supabase
+### Option C: Supabase (Your Current Setup)
 
 1. Sign up at https://supabase.com
 2. Create a new project
-3. Go to **Settings** → **Database**
-4. Copy the **Connection String** (URI format)
+3. Go to **Settings** → **Database** → **Connection Pooling**
+4. **CRITICAL:** Get TWO connection strings:
+   - **Direct Connection** (port 5432) - for `DIRECT_DATABASE_URL`
+   - **Transaction Mode Pooler** (port 6543) - for `DATABASE_URL`
 
-**Save your `DATABASE_URL` - you'll need it in Step 4!**
+**Example URLs:**
+```bash
+# Direct connection (port 5432) - for migrations
+DIRECT_DATABASE_URL=postgresql://postgres.xxxxx:[PASSWORD]@db.oovivyfwzifxsjbnmvow.supabase.com:5432/postgres
+
+# Pooler connection (port 6543) - for app queries in Vercel
+DATABASE_URL=postgresql://postgres.xxxxx:[PASSWORD]@db.oovivyfwzifxsjbnmvow.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+```
+
+**⚠️ Important:** Always use port **6543** (connection pooler) in Vercel, never port 5432 (direct connection)
+
+**Save BOTH URLs - you'll need them in Step 4!**
 
 ---
 
@@ -385,12 +398,54 @@ git push origin main
 - Check database is accessible (some providers restrict IPs)
 - Vercel Functions run in AWS us-east-1 by default
 
-### Issue: "Session storage error"
+### Issue: "Session storage error" / "MissingSessionTableError"
+
+**Symptoms:**
+```
+Error: Can't reach database server at db.xxx.supabase.com:5432
+Timed out fetching a new connection from the connection pool
+MissingSessionTableError: Prisma session table does not exist
+```
+
+**Root Cause:**
+- Using direct Supabase connection (port 5432) instead of connection pooler (port 6543)
+- PrismaClient not optimized for serverless
+- Connection pool exhaustion in Vercel's serverless functions
 
 **Solution:**
-- Ensure Prisma migrations ran successfully
-- Check Session table exists in database
-- Verify PrismaClient is initialized correctly
+1. **Update Vercel Environment Variables:**
+   ```bash
+   # Add BOTH variables in Vercel Dashboard
+   DATABASE_URL=postgresql://postgres.xxx:[PASSWORD]@db.xxx.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+   DIRECT_DATABASE_URL=postgresql://postgres.xxx:[PASSWORD]@db.xxx.supabase.com:5432/postgres
+   ```
+   
+   **Note the port difference:** 6543 (pooler) vs 5432 (direct)
+
+2. **Verify Prisma Schema has directUrl:**
+   ```prisma
+   datasource db {
+     provider  = "postgresql"
+     url       = env("DATABASE_URL")
+     directUrl = env("DIRECT_DATABASE_URL")
+   }
+   ```
+
+3. **Regenerate Prisma Client:**
+   ```bash
+   npx prisma generate
+   git add .
+   git commit -m "Fix serverless database connection"
+   git push
+   ```
+
+4. **Redeploy in Vercel** (after env vars update)
+
+5. **If table exists but still errors:**
+   - Check table name casing: PostgreSQL uses lowercase by default
+   - Run: `SELECT * FROM "Session" LIMIT 1;` (with quotes for case-sensitive)
+   - If that fails, run: `SELECT * FROM session LIMIT 1;` (lowercase)
+   - Add `@@map("Session")` in your Prisma model if needed (already done in latest schema)
 
 ### Issue: "Module not found" errors
 
@@ -417,6 +472,22 @@ git push
 - Verify `SHOPIFY_APP_URL` matches your Vercel URL exactly
 - Check redirect URLs in `shopify.app.toml` are correct
 - Run `shopify app deploy` to sync configuration
+
+### Issue: "WebSocket connection failed" / "Resource preload warnings"
+
+**Symptoms:**
+```
+WebSocket connection to 'wss://...' failed
+The resource was preloaded using link preload but not used within a few seconds
+```
+
+**Solution:**
+These are **non-critical warnings** from Shopify's App Bridge and development tools:
+- WebSocket warnings: Expected in production (only used in dev mode)
+- Preload warnings: Browser optimization hints, don't affect functionality
+- **No action needed** - these won't prevent your app from working
+
+If you want to suppress them, you can add this to your app configuration, but it's optional.
 
 ---
 

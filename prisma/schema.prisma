@@ -1,65 +1,62 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
+
+  @@map("Session")
 }
 
 model ShopSettings {
-  id            String    @id @default(uuid())
-  shop          String    @unique
-  apiKey        String?
-  postAsDraft   Boolean   @default(true)
-  lastSyncAt    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  blogs         OutblogPost[]
+  id          String        @id @default(uuid())
+  shop        String        @unique
+  apiKey      String?
+  postAsDraft Boolean       @default(true)
+  lastSyncAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  blogs       OutblogPost[]
 }
 
 model OutblogPost {
-  id              String    @id @default(uuid())
-  shopSettingsId  String
-  shopSettings    ShopSettings @relation(fields: [shopSettingsId], references: [id], onDelete: Cascade)
-  externalId      String?
-  slug            String
-  title           String
-  content         String?
-  metaDescription String?
-  featuredImage   String?
-  status          String    @default("draft")
-  categories      String?
-  tags            String?
+  id               String       @id @default(uuid())
+  shopSettingsId   String
+  externalId       String?
+  slug             String
+  title            String
+  content          String?
+  metaDescription  String?
+  featuredImage    String?
+  status           String       @default("draft")
+  categories       String?
+  tags             String?
   shopifyArticleId String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  shopSettings     ShopSettings @relation(fields: [shopSettingsId], references: [id], onDelete: Cascade)
 
   @@unique([shopSettingsId, slug])
 }
