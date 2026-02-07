@@ -882,7 +882,8 @@ export default function Index() {
                   Save & Connect
                 </s-button>
               </s-stack>
-            </s-box>
+            </s-stack>
+          </s-box>
         </s-section>
 
         <s-section slot="aside" heading="About Outblog">
