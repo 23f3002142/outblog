@@ -883,7 +883,6 @@ export default function Index() {
                 </s-button>
               </s-stack>
             </s-box>
-          </s-box>
         </s-section>
 
         <s-section slot="aside" heading="About Outblog">
