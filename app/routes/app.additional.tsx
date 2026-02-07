@@ -1,3 +1,5 @@
+import "../styles/outblog.css";
+
 export default function HelpPage() {
   return (
     <s-page heading="Help & Support">
@@ -43,22 +45,22 @@ export default function HelpPage() {
 
       <s-section heading="FAQ">
         <s-paragraph>
-          <s-text fontWeight="bold">
+          <span className="ob-text-bold">
             Where do I find my API key?
-          </s-text>
+          </span>
         </s-paragraph>
         <s-paragraph>
           Log in to your account at{" "}
           <s-link href="https://app.outblogai.com/dashboard" target="_blank">
-            app.outblogai.com/dashboard
+            OutBlogAI
           </s-link>{" "}
           and navigate to the API Keys section.
         </s-paragraph>
 
         <s-paragraph>
-          <s-text fontWeight="bold">
+          <span className="ob-text-bold">
             Can I edit posts before publishing?
-          </s-text>
+          </span>
         </s-paragraph>
         <s-paragraph>
           Posts are published as-is from Outblog. To edit content, update the
@@ -66,9 +68,9 @@ export default function HelpPage() {
         </s-paragraph>
 
         <s-paragraph>
-          <s-text fontWeight="bold">
+          <span className="ob-text-bold">
             What happens when I uninstall the app?
-          </s-text>
+          </span>
         </s-paragraph>
         <s-paragraph>
           All synced data (API key, post records) is removed from our database.

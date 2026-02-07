@@ -1,0 +1,210 @@
+/* ==========================================================================
+   Outblog – Layout & Spacing Utilities
+   Uses Polaris CSS custom properties for visual consistency.
+   Only styles wrapper/layout elements; never overrides Shadow DOM internals.
+   ========================================================================== */
+
+/* ---------- Flex stacks ---------- */
+.ob-stack-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.ob-stack-inline {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.ob-stack-inline-nowrap {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+/* gaps */
+.ob-gap-050 {
+  gap: var(--p-space-050, 2px);
+}
+
+.ob-gap-100 {
+  gap: var(--p-space-100, 4px);
+}
+
+.ob-gap-200 {
+  gap: var(--p-space-200, 8px);
+}
+
+.ob-gap-300 {
+  gap: var(--p-space-300, 12px);
+}
+
+.ob-gap-400 {
+  gap: var(--p-space-400, 16px);
+}
+
+.ob-gap-500 {
+  gap: var(--p-space-500, 20px);
+}
+
+.ob-gap-600 {
+  gap: var(--p-space-600, 24px);
+}
+
+.ob-gap-800 {
+  gap: var(--p-space-800, 32px);
+}
+
+/* alignment */
+.ob-align-center {
+  align-items: center;
+}
+
+.ob-justify-center {
+  justify-content: center;
+}
+
+.ob-text-center {
+  text-align: center;
+}
+
+/* ---------- Box / Card ---------- */
+.ob-box {
+  border-radius: var(--p-border-radius-200, 8px);
+}
+
+.ob-box-padded {
+  padding: var(--p-space-400, 16px);
+}
+
+.ob-box-padded-loose {
+  padding: var(--p-space-600, 24px);
+}
+
+.ob-bg-surface-secondary {
+  background-color: var(--p-color-bg-surface-secondary, #f6f6f7);
+}
+
+.ob-border {
+  border: var(--p-border-width-025, 1px) solid var(--p-color-border, #e1e3e5);
+  border-radius: var(--p-border-radius-200, 8px);
+  overflow: hidden;
+}
+
+/* ---------- Stat card ---------- */
+.ob-stat-card {
+  padding: var(--p-space-400, 16px);
+  background-color: var(--p-color-bg-surface-secondary, #f6f6f7);
+  border-radius: var(--p-border-radius-200, 8px);
+  min-width: 160px;
+  flex: 1;
+}
+
+/* ---------- Empty state ---------- */
+.ob-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--p-space-800, 32px) var(--p-space-400, 16px);
+  background-color: var(--p-color-bg-surface-secondary, #f6f6f7);
+  border-radius: var(--p-border-radius-200, 8px);
+  gap: var(--p-space-500, 20px);
+}
+
+/* ---------- Welcome box (setup screen) ---------- */
+.ob-welcome-box {
+  padding: var(--p-space-500, 20px);
+  background-color: var(--p-color-bg-surface-secondary, #f6f6f7);
+  border-radius: var(--p-border-radius-200, 8px);
+}
+
+/* ---------- Typography helpers ---------- */
+.ob-heading-lg {
+  font-size: var(--p-font-size-500, 20px);
+  font-weight: var(--p-font-weight-bold, 700);
+  line-height: var(--p-font-line-height-500, 24px);
+}
+
+.ob-heading-md {
+  font-size: var(--p-font-size-350, 16px);
+  font-weight: var(--p-font-weight-semibold, 600);
+  line-height: var(--p-font-line-height-400, 20px);
+}
+
+.ob-text-sm {
+  font-size: var(--p-font-size-275, 13px);
+  line-height: var(--p-font-line-height-300, 16px);
+}
+
+.ob-text-subdued {
+  color: var(--p-color-text-secondary, #6d7175);
+}
+
+.ob-text-semibold {
+  font-weight: var(--p-font-weight-semibold, 600);
+}
+
+.ob-text-bold {
+  font-weight: var(--p-font-weight-bold, 700);
+}
+
+/* ---------- Table ---------- */
+.ob-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ob-table thead tr {
+  background-color: var(--p-color-bg-surface-secondary, #f6f6f7);
+}
+
+.ob-table th,
+.ob-table td {
+  padding: var(--p-space-300, 12px);
+  text-align: left;
+}
+
+.ob-table th {
+  border-bottom: var(--p-border-width-025, 1px) solid var(--p-color-border, #e1e3e5);
+  font-weight: var(--p-font-weight-semibold, 600);
+  font-size: var(--p-font-size-275, 13px);
+  color: var(--p-color-text-secondary, #6d7175);
+}
+
+.ob-table tbody tr {
+  border-bottom: var(--p-border-width-025, 1px) solid var(--p-color-border, #e1e3e5);
+}
+
+/* ---------- Thumbnail ---------- */
+.ob-thumbnail {
+  width: 60px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--p-border-radius-100, 4px);
+}
+
+/* ---------- Pagination ---------- */
+.ob-pagination {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--p-space-300, 12px);
+}
+
+/* ---------- Action bar ---------- */
+.ob-action-bar {
+  display: flex;
+  flex-direction: row;
+  gap: var(--p-space-300, 12px);
+  flex-wrap: wrap;
+}
+
+/* ---------- Badge row (inline) ---------- */
+.ob-badge-row {
+  display: flex;
+  flex-direction: row;
+  gap: var(--p-space-200, 8px);
+  flex-wrap: wrap;
+}

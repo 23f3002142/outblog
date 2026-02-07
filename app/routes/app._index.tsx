@@ -9,6 +9,7 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import db from "../db.server";
+import "../styles/outblog.css";
 
 // const OUTBLOG_API_URL = "http://localhost:8000"; // use this locally if needed
 const OUTBLOG_API_URL = "https://api.outblogai.com";
@@ -846,19 +847,19 @@ export default function Index() {
     return (
       <s-page heading="Outblog Setup">
         <s-section heading="Connect to Outblog">
-          <s-box padding="base" background="bg-surface-secondary">
-            <s-stack direction="block" gap="large">
-              <s-stack direction="block" gap="050">
-                <s-text variant="headingMd">Welcome to Outblog!</s-text>
+          <div className="ob-welcome-box">
+            <div className="ob-stack-block ob-gap-600">
+              <div className="ob-stack-block ob-gap-050">
+                <span className="ob-heading-md">Welcome to Outblog!</span>
                 <s-text>
                   Connect your store to start publishing AI-generated blog posts.
                   Get fresh, SEO-optimized content delivered automatically.
                 </s-text>
-              </s-stack>
+              </div>
               
               <s-divider />
               
-              <s-stack direction="block" gap="base">
+              <div className="ob-stack-block ob-gap-400">
                 <s-text-field
                   label="API Key"
                   value={apiKey}
@@ -881,9 +882,9 @@ export default function Index() {
                 >
                   Save & Connect
                 </s-button>
-              </s-stack>
-            </s-stack>
-          </s-box>
+              </div>
+            </div>
+          </div>
         </s-section>
 
         <s-section slot="aside" heading="Get Started">
@@ -929,101 +930,94 @@ export default function Index() {
         </s-button>
 
         <s-section heading="Blog Posts">
-        <s-stack direction="block" gap="large">
+        <div className="ob-stack-block ob-gap-600">
           {/* Stats Cards */}
-          <s-stack direction="inline" gap="base" wrap={false}>
-            <s-box padding="base" background="bg-surface-secondary" minWidth="200px">
-              <s-stack direction="block" gap="050">
-                <s-text variant="bodySm" tone="subdued">Total Posts</s-text>
-                <s-text variant="headingLg">{loaderData.totalBlogs}</s-text>
-              </s-stack>
-            </s-box>
+          <div className="ob-stack-inline-nowrap ob-gap-400">
+            <div className="ob-stat-card">
+              <div className="ob-stack-block ob-gap-050">
+                <span className="ob-text-sm ob-text-subdued">Total Posts</span>
+                <span className="ob-heading-lg">{loaderData.totalBlogs}</span>
+              </div>
+            </div>
             
-            <s-box padding="base" background="bg-surface-secondary" minWidth="200px">
-              <s-stack direction="block" gap="050">
-                <s-text variant="bodySm" tone="subdued">Published</s-text>
-                <s-text variant="headingLg">
+            <div className="ob-stat-card">
+              <div className="ob-stack-block ob-gap-050">
+                <span className="ob-text-sm ob-text-subdued">Published</span>
+                <span className="ob-heading-lg">
                   {loaderData.blogs.filter(b => b.shopifyArticleId).length}
-                </s-text>
-              </s-stack>
-            </s-box>
+                </span>
+              </div>
+            </div>
             
             {loaderData.lastSyncAt && (
-              <s-box padding="base" background="bg-surface-secondary" minWidth="200px">
-                <s-stack direction="block" gap="050">
-                  <s-text variant="bodySm" tone="subdued">Last Sync</s-text>
-                  <s-text variant="bodyMd">
+              <div className="ob-stat-card">
+                <div className="ob-stack-block ob-gap-050">
+                  <span className="ob-text-sm ob-text-subdued">Last Sync</span>
+                  <s-text>
                     {new Date(loaderData.lastSyncAt).toLocaleDateString()}
                   </s-text>
-                </s-stack>
-              </s-box>
+                </div>
+              </div>
             )}
-          </s-stack>
+          </div>
           
           <s-divider />
 
           {loaderData.blogs.length > 0 ? (
             <>
-              <s-stack direction="inline" gap="base">
+              <div className="ob-action-bar">
                 <s-button onClick={handlePublishAllToShopify} variant="secondary" {...(isLoading ? { loading: true } : {})}>
                   Publish All to Shopify
                 </s-button>
                 <s-button onClick={handleCheckLiveStatus} variant="tertiary" {...(isLoading ? { loading: true } : {})}>
                   Check Live Status
                 </s-button>
-              </s-stack>
+              </div>
 
-              <s-box borderWidth="base" borderRadius="base" overflow="hidden">
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <div className="ob-border">
+                <table className="ob-table">
                   <thead>
-                    <tr style={{ backgroundColor: "var(--p-color-bg-surface-secondary)" }}>
-                      <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid var(--p-color-border)" }}>Title</th>
-                      <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid var(--p-color-border)" }}>Image</th>
-                      <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid var(--p-color-border)" }}>Status</th>
-                      <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid var(--p-color-border)" }}>Created</th>
-                      <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid var(--p-color-border)" }}>Actions</th>
+                    <tr>
+                      <th>Title</th>
+                      <th>Image</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loaderData.blogs.map((blog) => (
-                      <tr key={blog.id} style={{ borderBottom: "1px solid var(--p-color-border)" }}>
-                        <td style={{ padding: "12px" }}>
-                          <s-text fontWeight="semibold">{blog.title}</s-text>
+                      <tr key={blog.id}>
+                        <td>
+                          <span className="ob-text-semibold">{blog.title}</span>
                           {blog.metaDescription && (
-                            <s-text tone="neutral">
+                            <span className="ob-text-sm ob-text-subdued" style={{ display: "block", marginTop: "2px" }}>
                               {blog.metaDescription.substring(0, 60)}...
-                            </s-text>
+                            </span>
                           )}
                         </td>
-                        <td style={{ padding: "12px" }}>
+                        <td>
                           {blog.featuredImage ? (
                             <img
                               src={blog.featuredImage}
                               alt={blog.title}
-                              style={{ width: "60px", height: "40px", objectFit: "cover", borderRadius: "4px" }}
+                              className="ob-thumbnail"
                             />
                           ) : (
-                            <s-text tone="neutral">No image</s-text>
+                            <span className="ob-text-subdued">No image</span>
                           )}
                         </td>
-                        <td style={{ padding: "12px" }}>
+                        <td>
                           <s-badge tone={blog.shopifyArticleId ? "success" : "info"}>
                             {blog.shopifyArticleId ? "Published" : "Pending"}
                           </s-badge>
                         </td>
-                        <td style={{ padding: "12px" }}>
-                          <s-stack direction="block" gap="050">
-                            <s-text variant="bodySm">
-                              {new Date(blog.createdAt).toLocaleDateString()}
-                            </s-text>
-                            {blog.shopifyArticleId ? (
-                              <s-badge tone="success">Published</s-badge>
-                            ) : (
-                              <s-badge tone="attention">Draft</s-badge>
-                            )}
-                          </s-stack>
+                        <td>
+                          <span className="ob-text-sm">
+                            {new Date(blog.createdAt).toLocaleDateString()}
+                          </span>
                         </td>
-                        <td style={{ padding: "12px" }}>
+                        <td>
                           {!blog.shopifyArticleId ? (
                             <s-button
                               onClick={() => handlePublishToShopify(blog.id)}
@@ -1032,7 +1026,7 @@ export default function Index() {
                               Publish
                             </s-button>
                           ) : (
-                            <s-stack direction="inline" gap="base">
+                            <div className="ob-badge-row">
                               {/* Live view on storefront using blog slug and outblog blog handle */}
                               {blog.slug && (
                                 <s-button
@@ -1052,17 +1046,17 @@ export default function Index() {
                                   Editor view
                                 </s-button>
                               )}
-                            </s-stack>
+                            </div>
                           )}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </s-box>
+              </div>
 
               {totalPages > 1 && (
-                <s-stack direction="inline" gap="base" align="center">
+                <div className="ob-pagination">
                   <s-button
                     variant="tertiary"
                     onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
@@ -1080,40 +1074,36 @@ export default function Index() {
                   >
                     Next
                   </s-button>
-                </s-stack>
+                </div>
               )}
             </>
           ) : (
-            <s-box padding="loose" background="bg-surface-secondary" borderRadius="base">
-              <s-stack direction="block" gap="large" align="center">
-                <s-stack direction="block" gap="050" align="center">
-                  <s-text variant="headingMd">No blog posts yet</s-text>
-                  <s-text tone="subdued">
+            <div className="ob-empty-state">
+                <div className="ob-stack-block ob-gap-050 ob-text-center">
+                  <span className="ob-heading-md">No blog posts yet</span>
+                  <span className="ob-text-subdued">
                     Start by fetching your AI-generated posts from Outblog
-                  </s-text>
-                </s-stack>
+                  </span>
+                </div>
                 <s-button
                   onClick={handleFetchBlogs}
                   {...(isLoading ? { loading: true } : {})}
                 >
                   Fetch Your First Posts
                 </s-button>
-                <s-paragraph>
-                  <s-text variant="bodySm" tone="subdued">
-                    Need to create posts first?{" "}
-                    <s-link href="https://app.outblogai.com/dashboard" target="_blank">
-                      Visit Outblog Dashboard
-                    </s-link>
-                  </s-text>
-                </s-paragraph>
-              </s-stack>
-            </s-box>
+                <span className="ob-text-sm ob-text-subdued">
+                  Need to create posts first?{" "}
+                  <s-link href="https://app.outblogai.com/dashboard" target="_blank">
+                    Visit Outblog Dashboard
+                  </s-link>
+                </span>
+            </div>
           )}
-        </s-stack>
+        </div>
       </s-section>
 
       <s-section slot="aside" heading="Settings">
-        <s-stack direction="block" gap="base">
+        <div className="ob-stack-block ob-gap-400">
           <s-text-field
             label="API Key"
             value={apiKey}
@@ -1131,7 +1121,7 @@ export default function Index() {
           <s-button onClick={handleSaveApiKey} {...(isLoading ? { loading: true } : {})}>
             Update Settings
           </s-button>
-        </s-stack>
+        </div>
       </s-section>
 
       <s-section slot="aside" heading="Get Started">
