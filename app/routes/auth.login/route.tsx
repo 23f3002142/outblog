@@ -28,9 +28,13 @@ export default function Auth() {
 
   return (
     <AppProvider embedded={false}>
-      <s-page>
+      <s-page heading="Outblog">
         <Form method="post">
-        <s-section heading="Log in">
+        <s-section heading="Log in to Outblog">
+          <s-paragraph>
+            Enter your Shopify store domain to connect Outblog and start
+            publishing AI-generated blog posts.
+          </s-paragraph>
           <s-text-field
             name="shop"
             label="Shop domain"

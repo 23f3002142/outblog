@@ -6,9 +6,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   console.log(`Received ${topic} webhook for ${shop}`);
 
-  // With in-memory session storage, Shopify manages scopes for the current
-  // session internally. We log the current scopes for debugging but do not
-  // persist them to an external database.
+  // Shopify manages scopes for the current session via Prisma session storage.
+  // We log the current scopes for debugging.
   const current = payload.current as string[];
   if (session) {
     console.log(`Updated scopes for ${shop}:`, current.join(","));

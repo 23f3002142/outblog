@@ -478,24 +478,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }
       }
 
-      console.log("Creating article with:", {
-        blogId: outblogBlog.node.id,
-        title: blogPost.title,
-        handle: articleHandle,
-        isPublished: !shopSettings.postAsDraft,
-        contentLength: cleanContent.length,
-        session: session,
-        blogId1: outblogBlog.node.id,
-        title1: blogPost.title,
-        content1: cleanContent,
-        handle1: articleHandle,
-        isPublished1: !shopSettings.postAsDraft,
-        featuredImage: blogPost.featuredImage,
-        articleImage,
-      });
-
       // Create the article with proper author format
-      console.log("print 1")
       const createArticleResponse = await admin.graphql(
         `#graphql
         mutation createArticle($article: ArticleCreateInput!) {
@@ -535,9 +518,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           },
         }
       );      
-      console.log("print 2")
       const createArticleData = await createArticleResponse.json();
-      console.log("Create article response:", JSON.stringify(createArticleData, null, 2));
       
       // Handle Shopify API errors
       if (createArticleData.data?.articleCreate?.userErrors?.length > 0) {
@@ -1105,7 +1086,7 @@ export default function Index() {
           </s-list-item>
           <s-list-item>
             <s-link href="/app/additional">
-              App Settings
+              Help & Support
             </s-link>
           </s-list-item>
         </s-unordered-list>
