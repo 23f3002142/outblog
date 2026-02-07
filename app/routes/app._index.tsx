@@ -846,13 +846,18 @@ export default function Index() {
     return (
       <s-page heading="Outblog Setup">
         <s-section heading="Connect to Outblog">
-          <s-paragraph>
-            Enter your API key to connect your Shopify store with Outblog AI.
-            This will allow you to automatically sync and publish blog posts.
-          </s-paragraph>
-          
-          <s-stack direction="block" gap="base">
-            <s-box padding="base">
+          <s-box padding="base" background="bg-surface-secondary">
+            <s-stack direction="block" gap="large">
+              <s-stack direction="block" gap="050">
+                <s-text variant="headingMd">Welcome to Outblog!</s-text>
+                <s-text>
+                  Connect your store to start publishing AI-generated blog posts.
+                  Get fresh, SEO-optimized content delivered automatically.
+                </s-text>
+              </s-stack>
+              
+              <s-divider />
+              
               <s-stack direction="block" gap="base">
                 <s-text-field
                   label="API Key"
@@ -904,19 +909,38 @@ export default function Index() {
         </s-button>
 
         <s-section heading="Blog Posts">
-        <s-stack direction="block" gap="base">
-          <s-stack direction="inline" gap="base">
-            <s-paragraph>
-              <s-text fontWeight="bold">Total blogs: </s-text>
-              <s-text>{loaderData.totalBlogs}</s-text>
-            </s-paragraph>
+        <s-stack direction="block" gap="large">
+          {/* Stats Cards */}
+          <s-stack direction="inline" gap="base" wrap={false}>
+            <s-box padding="base" background="bg-surface-secondary" minWidth="200px">
+              <s-stack direction="block" gap="050">
+                <s-text variant="bodySm" tone="subdued">Total Posts</s-text>
+                <s-text variant="headingLg">{loaderData.totalBlogs}</s-text>
+              </s-stack>
+            </s-box>
+            
+            <s-box padding="base" background="bg-surface-secondary" minWidth="200px">
+              <s-stack direction="block" gap="050">
+                <s-text variant="bodySm" tone="subdued">Published</s-text>
+                <s-text variant="headingLg">
+                  {loaderData.blogs.filter(b => b.shopifyArticleId).length}
+                </s-text>
+              </s-stack>
+            </s-box>
+            
             {loaderData.lastSyncAt && (
-              <s-paragraph>
-                <s-text fontWeight="bold">Last sync: </s-text>
-                <s-text>{new Date(loaderData.lastSyncAt).toLocaleString()}</s-text>
-              </s-paragraph>
+              <s-box padding="base" background="bg-surface-secondary" minWidth="200px">
+                <s-stack direction="block" gap="050">
+                  <s-text variant="bodySm" tone="subdued">Last Sync</s-text>
+                  <s-text variant="bodyMd">
+                    {new Date(loaderData.lastSyncAt).toLocaleDateString()}
+                  </s-text>
+                </s-stack>
+              </s-box>
             )}
           </s-stack>
+          
+          <s-divider />
 
           {loaderData.blogs.length > 0 ? (
             <>
@@ -968,9 +992,16 @@ export default function Index() {
                           </s-badge>
                         </td>
                         <td style={{ padding: "12px" }}>
-                          <s-text variant="bodySm">
-                            {new Date(blog.createdAt).toLocaleDateString()}
-                          </s-text>
+                          <s-stack direction="block" gap="050">
+                            <s-text variant="bodySm">
+                              {new Date(blog.createdAt).toLocaleDateString()}
+                            </s-text>
+                            {blog.shopifyArticleId ? (
+                              <s-badge tone="success">Published</s-badge>
+                            ) : (
+                              <s-badge tone="attention">Draft</s-badge>
+                            )}
+                          </s-stack>
                         </td>
                         <td style={{ padding: "12px" }}>
                           {!blog.shopifyArticleId ? (
@@ -1033,14 +1064,27 @@ export default function Index() {
               )}
             </>
           ) : (
-            <s-box padding="loose" background="subdued" borderRadius="base">
-              <s-stack direction="block" gap="base" align="center">
-                <s-text>No blog posts found</s-text>
+            <s-box padding="loose" background="bg-surface-secondary" borderRadius="base">
+              <s-stack direction="block" gap="large" align="center">
+                <s-stack direction="block" gap="050" align="center">
+                  <s-text variant="headingMd">No blog posts yet</s-text>
+                  <s-text tone="subdued">
+                    Start by fetching your AI-generated posts from Outblog
+                  </s-text>
+                </s-stack>
+                <s-button
+                  onClick={handleFetchBlogs}
+                  {...(isLoading ? { loading: true } : {})}
+                >
+                  Fetch Your First Posts
+                </s-button>
                 <s-paragraph>
-                  Click "Fetch Blogs" to sync your posts from Outblog, or create new posts at{" "}
-                  <s-link href="https://www.outblogai.com/dashboard" target="_blank">
-                    outblogai.com
-                  </s-link>
+                  <s-text variant="bodySm" tone="subdued">
+                    Need to create posts first?{" "}
+                    <s-link href="https://app.outblogai.com/dashboard" target="_blank">
+                      Visit Outblog Dashboard
+                    </s-link>
+                  </s-text>
                 </s-paragraph>
               </s-stack>
             </s-box>
@@ -1068,6 +1112,33 @@ export default function Index() {
             Update Settings
           </s-button>
         </s-stack>
+      </s-section>
+
+      <s-section slot="aside" heading="Get Started">
+        <s-paragraph>
+          <s-text>Follow these quick steps to start publishing AI blog posts:</s-text>
+        </s-paragraph>
+        <s-unordered-list>
+          <s-list-item>
+            <s-text>Get API key from Outblog Dashboard</s-text>
+          </s-list-item>
+          <s-list-item>
+            <s-text>Enter key and click "Save & Connect"</s-text>
+          </s-list-item>
+          <s-list-item>
+            <s-text>Click "Fetch Blogs" to sync posts</s-text>
+          </s-list-item>
+          <s-list-item>
+            <s-text>Publish to your Shopify blog</s-text>
+          </s-list-item>
+        </s-unordered-list>
+        <s-button
+          href="https://app.outblogai.com/dashboard"
+          target="_blank"
+          variant="plain"
+        >
+          Get API Key
+        </s-button>
       </s-section>
 
       <s-section slot="aside" heading="Quick Links">
