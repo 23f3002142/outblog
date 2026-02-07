@@ -864,17 +864,10 @@ export default function Index() {
                 
                 <s-paragraph>
                   <s-text>Don't have an API key? </s-text>
-                  <s-link href="https://www.outblogai.com/dashboard" target="_blank">
-                    Get one from outblogai.com/dashboard
+                  <s-link href="https://app.outblogai.com/dashboard" target="_blank">
+                    Get one from app.outblogai.com/dashboard
                   </s-link>
                 </s-paragraph>
-
-                <s-checkbox
-                  checked={postAsDraft}
-                  onChange={(e: any) => setPostAsDraft(e.target.checked)}
-                >
-                  Save posts as draft (uncheck to publish directly)
-                </s-checkbox>
 
                 <s-button
                   onClick={handleSaveApiKey}
@@ -1080,7 +1073,7 @@ export default function Index() {
       <s-section slot="aside" heading="Quick Links">
         <s-unordered-list>
           <s-list-item>
-            <s-link href="https://www.outblogai.com/dashboard" target="_blank">
+            <s-link href="https://app.outblogai.com/dashboard" target="_blank">
               Outblog Dashboard
             </s-link>
           </s-list-item>

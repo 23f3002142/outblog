@@ -7,22 +7,31 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   console.log(`Received ${topic} webhook for ${shop}`);
 
-  // Clean up all app data for this shop so that reinstall starts from a clean state.
-  // This removes:
-  // - ShopSettings for the shop (API key, postAsDraft, lastSyncAt, etc.)
-  // - All related OutblogPost records (cascade delete via foreign key)
-  //
-  // Publishing logic and other routes will recreate ShopSettings as needed
-  // when the app is reinstalled, so this won't break the publish flow.
+  // Wipe ALL app data for this shop so reinstall is a completely fresh start.
+  // Order matters: delete child records first, then parent, then sessions.
+
+  // 1. Delete all OutblogPost records for this shop (blog posts synced from Outblog)
   const shopSettings = await db.shopSettings.findUnique({
     where: { shop },
   });
 
   if (shopSettings) {
+    // OutblogPost has onDelete: Cascade, but we delete explicitly to be safe
+    await db.outblogPost.deleteMany({
+      where: { shopSettingsId: shopSettings.id },
+    });
+
+    // 2. Delete ShopSettings (API key, postAsDraft, lastSyncAt, etc.)
     await db.shopSettings.delete({
       where: { shop },
     });
   }
+
+  // 3. Delete ALL sessions for this shop (access tokens, refresh tokens, OAuth state)
+  //    This ensures no stale tokens remain and forces fresh OAuth on reinstall.
+  await db.session.deleteMany({
+    where: { shop },
+  });
 
   return new Response();
 };

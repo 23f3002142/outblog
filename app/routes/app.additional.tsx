@@ -9,7 +9,7 @@ export default function HelpPage() {
         <s-ordered-list>
           <s-list-item>
             Get your API key from the{" "}
-            <s-link href="https://www.outblogai.com/dashboard" target="_blank">
+            <s-link href="https://app.outblogai.com/dashboard" target="_blank">
               Outblog Dashboard
             </s-link>
             .
@@ -49,8 +49,8 @@ export default function HelpPage() {
         </s-paragraph>
         <s-paragraph>
           Log in to your account at{" "}
-          <s-link href="https://www.outblogai.com/dashboard" target="_blank">
-            outblogai.com/dashboard
+          <s-link href="https://app.outblogai.com/dashboard" target="_blank">
+            app.outblogai.com/dashboard
           </s-link>{" "}
           and navigate to the API Keys section.
         </s-paragraph>
@@ -99,7 +99,7 @@ export default function HelpPage() {
       <s-section slot="aside" heading="Resources">
         <s-unordered-list>
           <s-list-item>
-            <s-link href="https://www.outblogai.com/dashboard" target="_blank">
+            <s-link href="https://app.outblogai.com/dashboard" target="_blank">
               Outblog Dashboard
             </s-link>
           </s-list-item>
