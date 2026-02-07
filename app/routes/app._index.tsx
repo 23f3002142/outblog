@@ -870,7 +870,7 @@ export default function Index() {
                 <s-paragraph>
                   <s-text>Don't have an API key? </s-text>
                   <s-link href="https://app.outblogai.com/dashboard" target="_blank">
-                    Get one from app.outblogai.com/dashboard
+                    Get one 
                   </s-link>
                 </s-paragraph>
 
@@ -884,6 +884,26 @@ export default function Index() {
               </s-stack>
             </s-stack>
           </s-box>
+        </s-section>
+
+        <s-section slot="aside" heading="Get Started">
+          <s-paragraph>
+            <s-text>Quick steps to get your AI blog posts:</s-text>
+          </s-paragraph>
+          <s-unordered-list>
+            <s-list-item>
+              <s-text>Create posts in Outblog Dashboard</s-text>
+            </s-list-item>
+            <s-list-item>
+              <s-text>Enter your API key below</s-text>
+            </s-list-item>
+            <s-list-item>
+              <s-text>Click "Fetch Blogs" to sync</s-text>
+            </s-list-item>
+            <s-list-item>
+              <s-text>Publish to your store</s-text>
+            </s-list-item>
+          </s-unordered-list>
         </s-section>
 
         <s-section slot="aside" heading="About Outblog">
