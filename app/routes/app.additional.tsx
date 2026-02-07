@@ -3,6 +3,20 @@ import "../styles/outblog.css";
 export default function HelpPage() {
   return (
     <s-page heading="Help & Support">
+      {/* Custom header with icon */}
+      <div style={{ 
+        display: "flex", 
+        alignItems: "center", 
+        gap: "8px", 
+        marginBottom: "24px",
+        padding: "16px 0"
+      }}>
+        <img src="/icon.svg" alt="Outblog" style={{ width: "24px", height: "24px" }} />
+        <span style={{ fontSize: "20px", fontWeight: "600", color: "var(--p-color-text)" }}>
+          Help & Support
+        </span>
+      </div>
+
       <s-section heading="Getting Started">
         <s-paragraph>
           Welcome to Outblog! Follow these steps to start publishing

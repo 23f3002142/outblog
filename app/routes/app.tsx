@@ -18,6 +18,7 @@ export default function App() {
   return (
     <AppProvider embedded apiKey={apiKey}>
       <s-app-nav>
+        <img src="/icon.svg" alt="Outblog" style={{ width: "24px", height: "24px", marginRight: "8px" }} />
         <s-link href="/app">Home</s-link>
         <s-link href="/app/additional">Help & Support</s-link>
       </s-app-nav>
