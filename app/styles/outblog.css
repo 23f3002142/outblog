@@ -208,3 +208,99 @@
   gap: var(--p-space-200, 8px);
   flex-wrap: wrap;
 }
+
+/* ---------- Custom page header with icon ---------- */
+.ob-page-header {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-200, 8px);
+  margin-bottom: var(--p-space-400, 16px);
+}
+
+.ob-page-header img {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.ob-page-header span {
+  font-size: var(--p-font-size-500, 20px);
+  font-weight: var(--p-font-weight-semibold, 600);
+  color: var(--p-color-text, #202223);
+}
+
+/* ---------- Table responsive wrapper ---------- */
+.ob-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  /* Stats cards: stack vertically on mobile */
+  .ob-stack-inline-nowrap {
+    flex-wrap: wrap;
+  }
+
+  .ob-stat-card {
+    min-width: 0;
+    flex-basis: calc(50% - 8px);
+  }
+
+  /* Table: allow horizontal scroll */
+  .ob-table th,
+  .ob-table td {
+    padding: var(--p-space-200, 8px);
+    font-size: var(--p-font-size-275, 13px);
+    white-space: nowrap;
+  }
+
+  /* Title column can wrap */
+  .ob-table td:first-child {
+    white-space: normal;
+    min-width: 120px;
+  }
+
+  /* Thumbnail smaller on mobile */
+  .ob-thumbnail {
+    width: 44px;
+    height: 30px;
+  }
+
+  /* Action bar: stack buttons */
+  .ob-action-bar {
+    flex-direction: column;
+  }
+
+  /* Welcome box: less padding */
+  .ob-welcome-box {
+    padding: var(--p-space-400, 16px);
+  }
+
+  /* Empty state: less padding */
+  .ob-empty-state {
+    padding: var(--p-space-600, 24px) var(--p-space-300, 12px);
+  }
+
+  /* Page header: slightly smaller */
+  .ob-page-header span {
+    font-size: var(--p-font-size-400, 18px);
+  }
+}
+
+@media (max-width: 480px) {
+  /* Stats cards: full width on very small screens */
+  .ob-stat-card {
+    flex-basis: 100%;
+  }
+
+  /* Pagination: tighter */
+  .ob-pagination {
+    gap: var(--p-space-200, 8px);
+  }
+
+  /* Badge row: stack on very small screens */
+  .ob-badge-row {
+    flex-direction: column;
+  }
+}

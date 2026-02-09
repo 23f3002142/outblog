@@ -846,27 +846,15 @@ export default function Index() {
   if (!loaderData.apiKey) {
     return (
       <s-page heading="Outblog Setup">
-      {/* Custom header with icon */}
-      <div style={{ 
-        display: "flex", 
-        alignItems: "center", 
-        gap: "8px", 
-        marginBottom: "24px",
-        padding: "16px 0"
-      }}>
-        <img src="/icon.svg" alt="Outblog" style={{ width: "24px", height: "24px" }} />
-        <span style={{ fontSize: "20px", fontWeight: "600", color: "var(--p-color-text)" }}>
-          Outblog Setup
-        </span>
+      <div className="ob-page-header">
+        <img src="/icon.svg" alt="Outblog" />
+        <span>Outblog Setup</span>
       </div>
         <s-section heading="Connect to Outblog">
           <div className="ob-welcome-box">
             <div className="ob-stack-block ob-gap-600">
               <div className="ob-stack-block ob-gap-050">
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <img src="/icon.svg" alt="Outblog" style={{ width: "32px", height: "32px" }} />
-                  <span className="ob-heading-md">Welcome to Outblog!</span>
-                </div>
+                <span className="ob-heading-md">Welcome to Outblog!</span>
                 <s-text>
                   Connect your store to start publishing AI-generated blog posts.
                   Get fresh, SEO-optimized content delivered automatically.
@@ -941,18 +929,9 @@ export default function Index() {
   try {
     return (
       <s-page heading="Outblog Dashboard">
-      {/* Custom header with icon */}
-      <div style={{ 
-        display: "flex", 
-        alignItems: "center", 
-        gap: "8px", 
-        marginBottom: "24px",
-        padding: "16px 0"
-      }}>
-        <img src="/icon.svg" alt="Outblog" style={{ width: "24px", height: "24px" }} />
-        <span style={{ fontSize: "20px", fontWeight: "600", color: "var(--p-color-text)" }}>
-          Outblog Dashboard
-        </span>
+      <div className="ob-page-header">
+        <img src="/icon.svg" alt="Outblog" />
+        <span>Outblog Dashboard</span>
       </div>
         <s-button slot="primary-action" onClick={handleFetchBlogs} {...(isLoading ? { loading: true } : {})}>
           Fetch Blogs
@@ -1003,7 +982,7 @@ export default function Index() {
                 </s-button>
               </div>
 
-              <div className="ob-border">
+              <div className="ob-border ob-table-wrapper">
                 <table className="ob-table">
                   <thead>
                     <tr>

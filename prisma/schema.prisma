@@ -27,11 +27,12 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 
+  @@index([shop])
   @@map("session")
 }
 
 model ShopSettings {
-  id          String        @id @default(uuid())
+  id          String        @id @default(dbgenerated("uuid_generate_v4()"))
   shop        String        @unique
   apiKey      String?
   postAsDraft Boolean       @default(true)
@@ -39,10 +40,12 @@ model ShopSettings {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   blogs       OutblogPost[]
+
+  @@index([shop])
 }
 
 model OutblogPost {
-  id               String       @id @default(uuid())
+  id               String       @id @default(dbgenerated("uuid_generate_v4()"))
   shopSettingsId   String
   externalId       String?
   slug             String
@@ -59,4 +62,6 @@ model OutblogPost {
   shopSettings     ShopSettings @relation(fields: [shopSettingsId], references: [id], onDelete: Cascade)
 
   @@unique([shopSettingsId, slug])
+  @@index([shopSettingsId])
+  @@index([slug])
 }
