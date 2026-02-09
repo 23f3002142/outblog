@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "66866aa94e14670889abc6fe392708e3"
+client_id = "bba561bb0273b10f2f09fd95cc8ab81b"
 name = "Outblog - AI Blog Posts" 
 application_url = "https://outblog-tau.vercel.app"
 embedded = true
