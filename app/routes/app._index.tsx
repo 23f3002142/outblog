@@ -11,6 +11,51 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import db from "../db.server";
 import "../styles/outblog.css";
 
+// Error handling utility
+const handleError = (error: unknown, context: string) => {
+  console.error(`[${context}] Error:`, error);
+  
+  // Don't expose stack traces in production
+  if (process.env.NODE_ENV === 'production') {
+    // Log full error for debugging but don't expose to user
+    console.error(`[${context}] Full error details:`, error);
+  }
+  
+  // Categorize errors for user-friendly messages
+  if (error instanceof Error) {
+    // Network/DNS errors
+    if (error.message.includes('fetch') || error.message.includes('network') || 
+        error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
+      return { success: false, error: "Network error. Please check your connection and try again." };
+    }
+    
+    // Timeout errors
+    if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
+      return { success: false, error: "Request timed out. Please try again." };
+    }
+    
+    // Database errors (Prisma)
+    if (error.message.includes('database') || error.message.includes('prisma') ||
+        error.message.includes('connection') || error.message.includes('P2002')) {
+      return { success: false, error: "Database error. Please try again in a moment." };
+    }
+    
+    // Shopify API errors
+    if (error.message.includes('shopify') || error.message.includes('THROTTLED') ||
+        error.message.includes('rate limit') || error.message.includes('429')) {
+      return { success: false, error: "Shopify API rate limit exceeded. Please try again in a few minutes." };
+    }
+    
+    // JSON parsing errors
+    if (error.message.includes('JSON') || error.message.includes('Unexpected token')) {
+      return { success: false, error: "Data format error. Please try again." };
+    }
+  }
+  
+  // Generic fallback
+  return { success: false, error: "Something went wrong. Please try again." };
+};
+
 // const OUTBLOG_API_URL = "http://localhost:8000"; // use this locally if needed
 const OUTBLOG_API_URL = "https://api.outblogai.com";
 
@@ -37,120 +82,179 @@ interface LoaderData {
   currentPage: number;
   totalPages: number;
   lastSyncAt: string | null;
+  error?: string; // Optional error field for loader errors
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
-  const shop = session.shop;
-  
-  // Get pagination params from URL
-  const url = new URL(request.url);
-  const page = parseInt(url.searchParams.get("page") || "1", 10);
-  const pageSize = 10;
-  const skip = (page - 1) * pageSize;
+  try {
+    const { session } = await authenticate.admin(request);
+    const shop = session.shop;
+    
+    // Get pagination params from URL
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get("page") || "1", 10);
+    const pageSize = 10;
+    const skip = (page - 1) * pageSize;
 
-  let shopSettings = await db.shopSettings.findUnique({
-    where: { shop },
-    include: { blogs: true }
-  });
+    let shopSettings;
+    try {
+      shopSettings = await db.shopSettings.findUnique({
+        where: { shop },
+        include: { blogs: true }
+      });
 
-  if (!shopSettings) {
-    shopSettings = await db.shopSettings.create({
-      data: {
-        shop,
+      if (!shopSettings) {
+        shopSettings = await db.shopSettings.create({
+          data: {
+            shop,
+            postAsDraft: true,
+          },
+          include: { blogs: true }
+        });
+      }
+    } catch (dbError) {
+      throw new Error(`Database connection failed: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`);
+    }
+
+    let totalBlogs, blogs;
+    try {
+      [totalBlogs, blogs] = await Promise.all([
+        db.outblogPost.count({
+          where: { shopSettingsId: shopSettings.id }
+        }),
+        db.outblogPost.findMany({
+          where: { shopSettingsId: shopSettings.id },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: pageSize,
+        })
+      ]);
+    } catch (dbError) {
+      throw new Error(`Failed to fetch blog data: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`);
+    }
+
+    return {
+      shop,
+      apiKey: shopSettings.apiKey,
+      postAsDraft: shopSettings.postAsDraft,
+      blogs: blogs.map((b: any) => ({
+        ...b,
+        createdAt: b.createdAt.toISOString(),
+      })),
+      totalBlogs,
+      currentPage: page,
+      totalPages: Math.ceil(totalBlogs / pageSize),
+      lastSyncAt: shopSettings.lastSyncAt?.toISOString() || null,
+    } as LoaderData;
+  } catch (error) {
+    // Don't expose detailed errors in production
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[LOADER] Error:', error);
+      // Return safe defaults instead of throwing
+      return {
+        shop: '',
+        apiKey: null,
         postAsDraft: true,
-      },
-      include: { blogs: true }
-    });
+        blogs: [],
+        totalBlogs: 0,
+        currentPage: 1,
+        totalPages: 0,
+        lastSyncAt: null,
+        error: "Failed to load data. Please refresh the page."
+      } as LoaderData & { error?: string };
+    }
+    throw error; // In development, let the error through for debugging
   }
-
-  const totalBlogs = await db.outblogPost.count({
-    where: { shopSettingsId: shopSettings.id }
-  });
-
-  const blogs = await db.outblogPost.findMany({
-    where: { shopSettingsId: shopSettings.id },
-    orderBy: { createdAt: 'desc' },
-    skip,
-    take: pageSize,
-  });
-
-  return {
-    shop,
-    apiKey: shopSettings.apiKey,
-    postAsDraft: shopSettings.postAsDraft,
-    blogs: blogs.map((b: any) => ({
-      ...b,
-      createdAt: b.createdAt.toISOString(),
-    })),
-    totalBlogs,
-    currentPage: page,
-    totalPages: Math.ceil(totalBlogs / pageSize),
-    lastSyncAt: shopSettings.lastSyncAt?.toISOString() || null,
-  } as LoaderData;
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session, admin } = await authenticate.admin(request);
-  const shop = session.shop;
-  const formData = await request.formData();
-  const actionType = formData.get("_action") as string;
+  try {
+    const { session, admin } = await authenticate.admin(request);
+    const shop = session.shop;
+    const formData = await request.formData();
+    const actionType = formData.get("_action") as string;
 
-  if (actionType === "saveApiKey") {
-    const apiKey = formData.get("apiKey") as string;
-    const postAsDraft = formData.get("postAsDraft") === "true";
+    if (actionType === "saveApiKey") {
+      const apiKey = formData.get("apiKey") as string;
+      const postAsDraft = formData.get("postAsDraft") === "true";
 
-    // Validate API key with Outblog backend
-    try {
-      const validateResponse = await fetch(`${OUTBLOG_API_URL}/blogs/validate-api-key`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-        },
-      });
+      // Validate API key with Outblog backend
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        
+        const validateResponse = await fetch(`${OUTBLOG_API_URL}/blogs/validate-api-key`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+          },
+          signal: controller.signal,
+        });
 
-      if (!validateResponse.ok) {
-        console.log(validateResponse);
-        return { success: false, error: "Failed to validate API key" };
+        clearTimeout(timeoutId);
+
+        if (!validateResponse.ok) {
+          if (validateResponse.status === 401) {
+            return { success: false, error: "Invalid API key. Please check your credentials." };
+          } else if (validateResponse.status === 429) {
+            return { success: false, error: "Too many requests. Please try again in a minute." };
+          } else if (validateResponse.status >= 500) {
+            return { success: false, error: "Service temporarily unavailable. Please try again later." };
+          }
+          return { success: false, error: "Failed to validate API key" };
+        }
+
+        const validateData = await validateResponse.json();
+        if (!validateData.valid) {
+          return { success: false, error: "Invalid API key" };
+        }
+
+        // Save API key to database
+        try {
+          await db.shopSettings.upsert({
+            where: { shop },
+            update: { apiKey, postAsDraft },
+            create: { shop, apiKey, postAsDraft: postAsDraft || true },
+          });
+        } catch (dbError) {
+          return handleError(dbError, "SAVE_API_KEY_DB");
+        }
+
+        return { success: true, message: "API key saved successfully" };
+      } catch (error) {
+        return handleError(error, "VALIDATE_API_KEY");
       }
-
-      const validateData = await validateResponse.json();
-      if (!validateData.valid) {
-        return { success: false, error: "Invalid API key" };
-      }
-
-      // Save API key
-      await db.shopSettings.upsert({
-        where: { shop },
-        update: { apiKey, postAsDraft },
-        create: { shop, apiKey, postAsDraft: postAsDraft || true },
-      });
-
-      return { success: true, message: "API key saved successfully" };
-    } catch (error) {
-      return { success: false, error: "Failed to validate API key" };
     }
-  }
 
   if (actionType === "fetchBlogs") {
-    const shopSettings = await db.shopSettings.findUnique({
-      where: { shop }
-    });
+    let shopSettings;
+    try {
+      shopSettings = await db.shopSettings.findUnique({
+        where: { shop }
+      });
+    } catch (dbError) {
+      return handleError(dbError, "FETCH_BLOGS_DB_GET");
+    }
 
     if (!shopSettings?.apiKey) {
       return { success: false, error: "API key not configured" };
     }
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for blog fetch
+      
       const response = await fetch(`${OUTBLOG_API_URL}/blogs/posts/wp`, {
         headers: {
           "x-api-key": shopSettings.apiKey,
         },
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        // Handle specific HTTP errors
         if (response.status === 401) {
           return { success: false, error: "Invalid API key. Please check your Outblog API configuration." };
         } else if (response.status === 403) {
@@ -167,81 +271,53 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const data = await response.json();
       const posts = data.data?.posts || [];
 
-      // Store blogs in database
-      for (const post of posts) {
-        const slug = post.slug || post.title?.toLowerCase().replace(/\s+/g, "-") || "untitled";
-        
-        await db.outblogPost.upsert({
-          where: {
-            shopSettingsId_slug: {
+      // Store blogs in database with error handling
+      try {
+        for (const post of posts) {
+          const slug = post.slug || post.title?.toLowerCase().replace(/\s+/g, "-") || "untitled";
+          
+          await db.outblogPost.upsert({
+            where: {
+              shopSettingsId_slug: {
+                shopSettingsId: shopSettings.id,
+                slug
+              }
+            },
+            update: {
+              externalId: post.id,
+              title: post.title || "Untitled",
+              content: post.content,
+              metaDescription: post.blog_meta_data?.meta_description,
+              featuredImage: post.featured_image,
+              categories: JSON.stringify(post.blog_meta_data?.categories || []),
+              tags: JSON.stringify(post.blog_meta_data?.tags || []),
+            },
+            create: {
               shopSettingsId: shopSettings.id,
-              slug
-            }
-          },
-          update: {
-            externalId: post.id,
-            title: post.title || "Untitled",
-            content: post.content,
-            metaDescription: post.blog_meta_data?.meta_description,
-            featuredImage: post.featured_image,
-            categories: JSON.stringify(post.blog_meta_data?.categories || []),
-            tags: JSON.stringify(post.blog_meta_data?.tags || []),
-          },
-          create: {
-            shopSettingsId: shopSettings.id,
-            externalId: post.id,
-            slug,
-            title: post.title || "Untitled",
-            content: post.content,
-            metaDescription: post.blog_meta_data?.meta_description,
-            featuredImage: post.featured_image,
-            categories: JSON.stringify(post.blog_meta_data?.categories || []),
-            tags: JSON.stringify(post.blog_meta_data?.tags || []),
-          },
-        });
-      }
+              externalId: post.id,
+              slug,
+              title: post.title || "Untitled",
+              content: post.content,
+              metaDescription: post.blog_meta_data?.meta_description,
+              featuredImage: post.featured_image,
+              categories: JSON.stringify(post.blog_meta_data?.categories || []),
+              tags: JSON.stringify(post.blog_meta_data?.tags || []),
+            },
+          });
+        }
 
-      // Update last sync time
-      await db.shopSettings.update({
-        where: { shop },
-        data: { lastSyncAt: new Date() }
-      });
+        // Update last sync time
+        await db.shopSettings.update({
+          where: { shop },
+          data: { lastSyncAt: new Date() }
+        });
+      } catch (dbError) {
+        return handleError(dbError, "FETCH_BLOGS_DB_SAVE");
+      }
 
       return { success: true, message: `Fetched ${posts.length} blogs` };
     } catch (error) {
-      console.error("Error fetching blogs:", error);
-      
-      // Handle specific error types
-      if (error instanceof Error) {
-        // Network errors
-        if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('ENOTFOUND')) {
-          return { 
-            success: false, 
-            error: "Network error. Please check your connection and try again." 
-          };
-        }
-        
-        // Timeout errors
-        if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
-          return { 
-            success: false, 
-            error: "Request timed out. Please try again." 
-          };
-        }
-        
-        // Database errors
-        if (error.message.includes('database') || error.message.includes('prisma')) {
-          return { 
-            success: false, 
-            error: "Database error. Please try again in a moment." 
-          };
-        }
-      }
-      
-      return { 
-        success: false, 
-        error: "Failed to fetch blogs from Outblog. Please try again." 
-      };
+      return handleError(error, "FETCH_BLOGS_API");
     }
   }
 
@@ -762,6 +838,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   return { success: false, error: "Unknown action" };
+  } catch (error) {
+    return handleError(error, "ACTION_GENERAL");
+  }
 };
 
 export default function Index() {
@@ -777,6 +856,19 @@ export default function Index() {
   const isLoading = fetcher.state !== "idle";
   const actionData = fetcher.data;
   const { currentPage, totalPages } = loaderData;
+
+  // Handle loader errors
+  useEffect(() => {
+    if (loaderData.error) {
+      try {
+        shopify.toast.show(loaderData.error, { isError: true, duration: 5000 });
+      } catch (error) {
+        console.error("Error showing loader error toast:", error);
+        // Fallback for critical errors
+        alert(loaderData.error);
+      }
+    }
+  }, [loaderData.error, shopify]);
 
   useEffect(() => {
     if (actionData?.success && actionData?.message) {
